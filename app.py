@@ -1245,7 +1245,7 @@ def _usage_doc(lang: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="VoxCPM TTS Tool")
     parser.add_argument("--port", type=int, default=8808)
-    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--share", action="store_true")
     parser.add_argument("--root", default=".", help="Project root (where pretrained_models/ etc. live)")
     args = parser.parse_args(argv)

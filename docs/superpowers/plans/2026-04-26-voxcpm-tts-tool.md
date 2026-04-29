@@ -2638,7 +2638,7 @@ def _usage_doc(lang: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="VoxCPM TTS Tool")
     parser.add_argument("--port", type=int, default=8808)
-    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--share", action="store_true")
     parser.add_argument("--root", default=".", help="Project root (where pretrained_models/ etc. live)")
     args = parser.parse_args(argv)
@@ -2724,7 +2724,7 @@ The first launch downloads ~6 GB of model files into `./pretrained_models/`.
 
 CLI flags:
 - `--port` (default `8808`)
-- `--host` (default `127.0.0.1`)
+- `--host` (default `0.0.0.0`)
 - `--share` enables Gradio's public tunnel
 - `--root` overrides the project root (where `voices/`, `outputs/`, `pretrained_models/` live)
 

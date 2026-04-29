@@ -10,7 +10,7 @@
 # Models are resolved and downloaded inside app.py at startup.
 #
 # All arguments are forwarded to app.py:
-#   ./run.sh                       # default: --port 8808 --host 127.0.0.1
+#   ./run.sh                       # default: --port 8808 --host 0.0.0.0
 #   ./run.sh --port 9000           # custom port
 #   ./run.sh --share               # public Gradio tunnel
 #   ./run.sh --root /some/dir      # alt project root

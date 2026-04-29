@@ -35,7 +35,7 @@
 .\run.ps1
 ```
 
-默认地址：
+默认监听所有网卡。浏览器本机访问：
 
 ```text
 http://127.0.0.1:8808
@@ -45,7 +45,7 @@ http://127.0.0.1:8808
 
 ```powershell
 .\run.ps1 --port 9000
-.\run.ps1 --host 0.0.0.0
+.\run.ps1 --host 127.0.0.1
 .\run.ps1 --share
 .\run.ps1 --root E:\path\to\data-root
 ```
@@ -60,7 +60,7 @@ http://127.0.0.1:8808
 
 ```bash
 ./run.sh --port 9000
-./run.sh --host 0.0.0.0
+./run.sh --host 127.0.0.1
 ./run.sh --share
 ./run.sh --root /path/to/data-root
 ```
@@ -132,7 +132,7 @@ Linux / macOS：
 | 参数 | 默认值 | 说明 |
 | --- | --- | --- |
 | `--port` | `8808` | Gradio 服务端口 |
-| `--host` | `127.0.0.1` | Gradio 监听地址 |
+| `--host` | `0.0.0.0` | Gradio 监听地址；默认允许局域网访问 |
 | `--share` | `false` | 启用 Gradio 公网分享链接 |
 | `--root` | `.` | 数据根目录，影响 `voices/`、`outputs/`、`pretrained_models/` 的位置 |
 
@@ -248,4 +248,3 @@ SenseVoiceSmall 或 `funasr` 不可用时，转写按钮会禁用。仍然可以
 ### 降噪开关没有效果
 
 ZipEnhancer 没有成功加载时，界面仍可生成音频，但降噪开关不会生效。启动日志会提示 ZipEnhancer 的可用状态。
-

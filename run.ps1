@@ -9,7 +9,7 @@
 # Models are resolved and downloaded inside app.py at startup.
 #
 # All arguments are forwarded to app.py:
-#   .\run.ps1                       # default: --port 8808 --host 127.0.0.1
+#   .\run.ps1                       # default: --port 8808 --host 0.0.0.0
 #   .\run.ps1 --port 9000           # custom port
 #   .\run.ps1 --share               # public Gradio tunnel
 #   .\run.ps1 --root C:\some\dir    # alt project root
