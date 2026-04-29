@@ -91,6 +91,7 @@ def initialize(project_root: Path) -> tuple[AppState, list[str]]:
     # VoxCPM2 — required.
     voxcpm_path = model_resolver.resolve_voxcpm(
         paths.voxcpm_dir,
+        preferred_dirs=[p for p in (paths.shared_voxcpm_dir,) if p is not None],
         modelscope_download=model_resolver.real_modelscope_download,
         hf_download=model_resolver.real_hf_download,
     )
@@ -102,6 +103,7 @@ def initialize(project_root: Path) -> tuple[AppState, list[str]]:
     try:
         zipenhancer_path = model_resolver.resolve_zipenhancer(
             paths.zipenhancer_dir,
+            preferred_dirs=[p for p in (paths.shared_zipenhancer_dir,) if p is not None],
             modelscope_download=model_resolver.real_modelscope_download,
         )
         zipenhancer_loaded = True
@@ -114,6 +116,7 @@ def initialize(project_root: Path) -> tuple[AppState, list[str]]:
     try:
         sv_path = model_resolver.resolve_sensevoice(
             paths.sensevoice_dir,
+            preferred_dirs=[p for p in (paths.shared_sensevoice_dir,) if p is not None],
             modelscope_download=model_resolver.real_modelscope_download,
             hf_download=model_resolver.real_hf_download,
         )
@@ -135,6 +138,8 @@ def initialize(project_root: Path) -> tuple[AppState, list[str]]:
     # Build VoxCPM model singleton.
     import voxcpm
     import inspect
+    from contextlib import nullcontext
+    from voxcpm_tts_tool.torch_compat import zipenhancer_torch_load_compat
     # Diagnostic: print SDK version + _generate signature so we can spot any
     # API drift (e.g. reference_wav_path missing in older voxcpm).
     try:
@@ -145,12 +150,18 @@ def initialize(project_root: Path) -> tuple[AppState, list[str]]:
     except Exception as exc:
         print(f"[voxcpm] could not introspect: {exc}", file=sys.stderr, flush=True)
 
-    model = voxcpm.VoxCPM.from_pretrained(
-        hf_model_id=str(voxcpm_path),
-        load_denoiser=zipenhancer_loaded,
-        zipenhancer_model_id=str(zipenhancer_path) if zipenhancer_path is not None else None,
-        optimize=True,
+    torch_load_compat = (
+        zipenhancer_torch_load_compat(zipenhancer_path)
+        if zipenhancer_loaded and zipenhancer_path is not None
+        else nullcontext()
     )
+    with torch_load_compat:
+        model = voxcpm.VoxCPM.from_pretrained(
+            hf_model_id=str(voxcpm_path),
+            load_denoiser=zipenhancer_loaded,
+            zipenhancer_model_id=str(zipenhancer_path) if zipenhancer_path is not None else None,
+            optimize=True,
+        )
     # voxcpm doesn't expose sample_rate uniformly; sniff once.
     if not hasattr(model, "sample_rate"):
         model.sample_rate = getattr(getattr(model, "tts_model", None), "sample_rate", 16000)

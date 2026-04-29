@@ -22,6 +22,8 @@ cd "$(dirname "$0")"
 
 TARGET_PY="3.12"
 VENV_DIR=".venv"
+TORCH_INDEX="https://download.pytorch.org/whl/cu124"
+VOXCPM_SDK="voxcpm>=2.0.2"
 
 # ---- ffmpeg auto-detect + (opt-in) install ------------------------------
 # voxcpm uses torchaudio to load reference audio. torchaudio prefers ffmpeg
@@ -105,13 +107,18 @@ if command -v uv >/dev/null 2>&1; then
         exit 1
     fi
 
+    echo "==> Installing CUDA-enabled PyTorch via uv ..."
+    VIRTUAL_ENV="$(pwd)/$VENV_DIR" uv pip install torch torchaudio --index-url "$TORCH_INDEX"
     echo "==> Installing dependencies from requirements.txt via uv ..."
     VIRTUAL_ENV="$(pwd)/$VENV_DIR" uv pip install -r requirements.txt
+    echo "==> Installing voxcpm SDK (no deps; avoids torchcodec on Windows) ..."
+    VIRTUAL_ENV="$(pwd)/$VENV_DIR" uv pip install "$VOXCPM_SDK" --no-deps
     echo "==> Installing local package (no deps) ..."
     VIRTUAL_ENV="$(pwd)/$VENV_DIR" uv pip install -e . --no-deps
 
     echo "==> Launching VoxCPM TTS Tool ..."
-    echo "    First launch will download ~6 GB of model files into pretrained_models/."
+    echo "    Model lookup: ../models/openbmb__VoxCPM2 and ../model/{SenseVoiceSmall,ZipEnhancer} first;"
+    echo "    missing models fall back to pretrained_models/."
     echo
     exec "$VENV_PY" app.py "$@"
 fi
@@ -151,13 +158,18 @@ if PYTHON=$(find_python); then
     echo "==> Upgrading pip ..."
     "$VENV_PY" -m pip install --upgrade pip
 
+    echo "==> Installing CUDA-enabled PyTorch ..."
+    "$VENV_PY" -m pip install torch torchaudio --index-url "$TORCH_INDEX"
     echo "==> Installing dependencies from requirements.txt ..."
     "$VENV_PY" -m pip install -r requirements.txt
+    echo "==> Installing voxcpm SDK (no deps; avoids torchcodec on Windows) ..."
+    "$VENV_PY" -m pip install "$VOXCPM_SDK" --no-deps
     echo "==> Installing local package (no deps) ..."
     "$VENV_PY" -m pip install -e . --no-deps
 
     echo "==> Launching VoxCPM TTS Tool ..."
-    echo "    First launch will download ~6 GB of model files into pretrained_models/."
+    echo "    Model lookup: ../models/openbmb__VoxCPM2 and ../model/{SenseVoiceSmall,ZipEnhancer} first;"
+    echo "    missing models fall back to pretrained_models/."
     echo
     exec "$VENV_PY" app.py "$@"
 fi

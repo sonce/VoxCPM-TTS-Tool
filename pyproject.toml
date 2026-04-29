@@ -8,9 +8,25 @@ version = "0.1.0"
 description = "Standalone Gradio TTS tool wrapping the voxcpm SDK"
 requires-python = ">=3.10,<3.13"
 # Mirrors requirements.txt; the launcher (run.sh / run.ps1) installs from
-# requirements.txt, so this list is only used for `pip install -e .` (no -r).
+# requirements.txt, then installs voxcpm separately with --no-deps because
+# voxcpm's torchcodec dependency has no Windows wheels.
 dependencies = [
-    "voxcpm>=2.0.2",
+    "torch>=2.5.0",
+    "torchaudio>=2.5.0",
+    "transformers>=4.36.2",
+    "einops",
+    "inflect",
+    "addict",
+    "wetext",
+    "datasets>=3,<4",
+    "pydantic",
+    "tqdm",
+    "simplejson",
+    "sortedcontainers",
+    "librosa",
+    "matplotlib",
+    "argbind",
+    "safetensors",
     "gradio>=6,<7",
     "numpy",
     "soundfile",

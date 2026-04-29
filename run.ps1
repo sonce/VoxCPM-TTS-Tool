@@ -25,6 +25,8 @@ Set-Location -Path $PSScriptRoot
 $TargetPy = '3.12'
 $VenvDir = '.venv'
 $VenvPy = Join-Path $VenvDir 'Scripts\python.exe'
+$TorchIndex = 'https://download.pytorch.org/whl/cu124'
+$VoxCPMSdk = 'voxcpm>=2.0.2'
 
 # ---- ffmpeg auto-detect + (opt-in) install ------------------------------
 # voxcpm uses torchaudio to load reference audio. torchaudio prefers ffmpeg
@@ -114,16 +116,23 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
         exit 1
     }
 
-    Write-Host '==> Installing dependencies from requirements.txt via uv ...'
     $env:VIRTUAL_ENV = (Resolve-Path $VenvDir).Path
+    Write-Host '==> Installing CUDA-enabled PyTorch via uv ...'
+    & uv pip install torch torchaudio --index-url $TorchIndex
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host '==> Installing dependencies from requirements.txt via uv ...'
     & uv pip install -r requirements.txt
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host '==> Installing voxcpm SDK (no deps; avoids torchcodec on Windows) ...'
+    & uv pip install $VoxCPMSdk --no-deps
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host '==> Installing local package (no deps) ...'
     & uv pip install -e . --no-deps
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     Write-Host '==> Launching VoxCPM TTS Tool ...'
-    Write-Host '    First launch will download ~6 GB of model files into pretrained_models\.'
+    Write-Host '    Model lookup: ..\models\openbmb__VoxCPM2 and ..\model\{SenseVoiceSmall,ZipEnhancer} first;'
+    Write-Host '    missing models fall back to pretrained_models\.'
     Write-Host ''
     & $VenvPy app.py @args
     exit $LASTEXITCODE
@@ -179,15 +188,22 @@ if ($python) {
     & $VenvPy -m pip install --upgrade pip
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+    Write-Host '==> Installing CUDA-enabled PyTorch ...'
+    & $VenvPy -m pip install torch torchaudio --index-url $TorchIndex
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host '==> Installing dependencies from requirements.txt ...'
     & $VenvPy -m pip install -r requirements.txt
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    Write-Host '==> Installing voxcpm SDK (no deps; avoids torchcodec on Windows) ...'
+    & $VenvPy -m pip install $VoxCPMSdk --no-deps
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Write-Host '==> Installing local package (no deps) ...'
     & $VenvPy -m pip install -e . --no-deps
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
     Write-Host '==> Launching VoxCPM TTS Tool ...'
-    Write-Host '    First launch will download ~6 GB of model files into pretrained_models\.'
+    Write-Host '    Model lookup: ..\models\openbmb__VoxCPM2 and ..\model\{SenseVoiceSmall,ZipEnhancer} first;'
+    Write-Host '    missing models fall back to pretrained_models\.'
     Write-Host ''
     & $VenvPy app.py @args
     exit $LASTEXITCODE

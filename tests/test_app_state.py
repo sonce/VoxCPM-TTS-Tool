@@ -18,6 +18,14 @@ def test_paths_for_creates_runtime_dirs(tmp_path):
         assert sub.exists() and sub.is_dir()
 
 
+def test_paths_for_points_to_sibling_shared_model_dirs(tmp_path):
+    project_root = tmp_path / "VoxCPM-TTS-Tool"
+    p = paths_for(project_root)
+    assert p.shared_voxcpm_dir == tmp_path / "models" / "openbmb__VoxCPM2"
+    assert p.shared_sensevoice_dir == tmp_path / "model" / "SenseVoiceSmall"
+    assert p.shared_zipenhancer_dir == tmp_path / "model" / "ZipEnhancer"
+
+
 def test_ephemeral_default_voice_unaddressable():
     v = ephemeral_default_voice()
     assert v.id == EPHEMERAL_DEFAULT_VOICE_ID

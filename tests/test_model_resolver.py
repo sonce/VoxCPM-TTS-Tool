@@ -28,6 +28,11 @@ def test_gitkeep_only_dir_is_invalid(tmp_path):
     assert not mr._has_any(tmp_path / "m", ["config.json"])
 
 
+def test_dir_with_git_lfs_pointer_model_file_is_invalid():
+    model_dir = Path(__file__).parent / "fixtures" / "lfs_pointer_model"
+    assert not mr._has_any(model_dir, ["pytorch_model.bin", "configuration.json"])
+
+
 # ---- env-var override ----
 
 def test_env_var_path_used_when_valid(tmp_path, monkeypatch):
@@ -56,6 +61,42 @@ def test_env_var_pointing_to_empty_dir_does_not_skip_download(tmp_path, monkeypa
                               hf_download=lambda *a, **k: pytest.fail("called"))
     assert path == local_dir
     assert calls and calls[0][0] == "ms"
+
+
+# ---- preferred shared paths ----
+
+def test_preferred_path_used_before_local_dir_and_download(tmp_path, monkeypatch):
+    monkeypatch.delenv("VOXCPM_MODEL_DIR", raising=False)
+    shared = tmp_path / "models/openbmb__VoxCPM2"
+    local_dir = tmp_path / "VoxCPM-TTS-Tool/pretrained_models/VoxCPM2"
+    _seed(shared, ["config.json"])
+    _seed(local_dir, ["config.json"])
+
+    path = mr.resolve_voxcpm(
+        local_dir,
+        preferred_dirs=[shared],
+        modelscope_download=lambda *a, **k: pytest.fail("called"),
+        hf_download=lambda *a, **k: pytest.fail("called"),
+    )
+
+    assert path == shared
+
+
+def test_invalid_preferred_path_falls_back_to_local_dir(tmp_path, monkeypatch):
+    monkeypatch.delenv("VOXCPM_MODEL_DIR", raising=False)
+    shared = tmp_path / "models/openbmb__VoxCPM2"
+    shared.mkdir(parents=True)
+    local_dir = tmp_path / "VoxCPM-TTS-Tool/pretrained_models/VoxCPM2"
+    _seed(local_dir, ["config.json"])
+
+    path = mr.resolve_voxcpm(
+        local_dir,
+        preferred_dirs=[shared],
+        modelscope_download=lambda *a, **k: pytest.fail("called"),
+        hf_download=lambda *a, **k: pytest.fail("called"),
+    )
+
+    assert path == local_dir
 
 
 # ---- modelscope hit ----

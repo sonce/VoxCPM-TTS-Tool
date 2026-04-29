@@ -5,9 +5,29 @@
 
 # ---- Runtime ------------------------------------------------------------
 
-# voxcpm SDK. >=2.0.2 is required for VoxCPM2 model + `reference_wav_path`
-# in `VoxCPM._generate(...)`. Older 2.0.x is missing this kwarg.
-voxcpm>=2.0.2
+# PyTorch is installed first by run.ps1/run.sh from the CUDA wheel index.
+# Keeping these here documents the runtime requirement and lets pip/uv skip
+# them when already satisfied.
+torch>=2.5.0
+torchaudio>=2.5.0
+
+# voxcpm SDK is installed separately by run.ps1/run.sh with --no-deps.
+# Reason: voxcpm 2.0.2 declares torchcodec, but torchcodec has no Windows
+# wheels; the app avoids torchaudio's torchcodec-dependent load path.
+transformers>=4.36.2
+einops
+inflect
+addict
+wetext
+datasets>=3,<4
+pydantic
+tqdm
+simplejson
+sortedcontainers
+librosa
+matplotlib
+argbind
+safetensors
 
 # voxcpm 2.0.2 transitively requires gradio>=6,<7 — keep aligned.
 gradio>=6,<7

@@ -24,10 +24,15 @@ class AppPaths:
     sensevoice_dir: Path
     zipenhancer_dir: Path
     cache_dir: Path
+    shared_voxcpm_dir: Path | None = None
+    shared_sensevoice_dir: Path | None = None
+    shared_zipenhancer_dir: Path | None = None
 
 
 def paths_for(project_root: Path) -> AppPaths:
     root = Path(project_root)
+    shared_model_root = root.parent / "model"
+    shared_models_root = root.parent / "models"
     p = AppPaths(
         root=root,
         voices=root / "voices",
@@ -37,6 +42,9 @@ def paths_for(project_root: Path) -> AppPaths:
         sensevoice_dir=root / "pretrained_models" / "SenseVoiceSmall",
         zipenhancer_dir=root / "pretrained_models" / "ZipEnhancer",
         cache_dir=root / ".cache",
+        shared_voxcpm_dir=shared_models_root / "openbmb__VoxCPM2",
+        shared_sensevoice_dir=shared_model_root / "SenseVoiceSmall",
+        shared_zipenhancer_dir=shared_model_root / "ZipEnhancer",
     )
     for d in (p.voices, p.voices_audio, p.outputs,
               p.voxcpm_dir, p.sensevoice_dir, p.zipenhancer_dir, p.cache_dir):
