@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "voxcpm-tts-tool"
+version = "0.1.0"
+description = "Standalone Gradio TTS tool wrapping the voxcpm SDK"
+requires-python = ">=3.10,<3.13"
+# Mirrors requirements.txt; the launcher (run.sh / run.ps1) installs from
+# requirements.txt, so this list is only used for `pip install -e .` (no -r).
+dependencies = [
+    "voxcpm>=2.0.2",
+    "gradio>=6,<7",
+    "numpy",
+    "soundfile",
+    "huggingface_hub",
+    "modelscope",
+    "funasr",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-mock"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

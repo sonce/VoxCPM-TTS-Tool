@@ -1,0 +1,23 @@
+# VoxCPM TTS Tool — runtime + dev dependencies
+# This is the single source of truth for what gets installed by run.sh / run.ps1.
+# pyproject.toml mirrors the production deps for `pip install -e .` to work,
+# but the launcher always installs from this file.
+
+# ---- Runtime ------------------------------------------------------------
+
+# voxcpm SDK. >=2.0.2 is required for VoxCPM2 model + `reference_wav_path`
+# in `VoxCPM._generate(...)`. Older 2.0.x is missing this kwarg.
+voxcpm>=2.0.2
+
+# voxcpm 2.0.2 transitively requires gradio>=6,<7 — keep aligned.
+gradio>=6,<7
+numpy
+soundfile
+huggingface_hub
+modelscope
+funasr
+
+# ---- Dev ----------------------------------------------------------------
+
+pytest
+pytest-mock

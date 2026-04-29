@@ -1,0 +1,93 @@
+sync:
+  defaults:
+    ignore:
+      paths:
+        # 源码控制、本地 agent 和编辑器状态。
+        - "**/.git"
+        - "**/.obsidian"
+        - "**/.claude"
+        - "**/.codex"
+        - "**/.zenflow"
+        - "**/.vs"
+        - "**/.idea"
+        - "**/.vscode"
+        - "**/*codex*/"
+        - "**/*dotnet*/"
+        - "**/.worktrees"
+
+        # 系统和编辑器临时文件。
+        - "**/Thumbs.db"
+        - "**/.DS_Store"
+        - "**/*.swp"
+        - "**/*.swo"
+        - "**/*~"
+        - "**/.user"
+
+        # 生成的 Mutagen 项目文件和本地密钥。
+        - "mutagen.yml"
+        - ".env"
+        - ".env.local"
+        - ".env.*.local"
+        - "*.pem"
+        - "*.key"
+
+        # Python 环境、缓存、构建产物和测试产物。
+        - "**/.venv"
+        - "**/venv"
+        - "**/env"
+        - "**/__pycache__"
+        - "**/.pytest_cache"
+        - "**/.ruff_cache"
+        - "**/.mypy_cache"
+        - "**/.pyright"
+        - "**/.coverage"
+        - "**/htmlcov"
+        - "**/dist"
+        - "**/build"
+        - "**/*.egg-info"
+        - "**/TestResults"
+
+        # JavaScript/node 产物，后续如果出现 Gradio 前端工具也能覆盖。
+        - "**/node_modules"
+        - "**/.npm"
+        - "**/.pnpm-store"
+
+        # .NET 产物，保留用于复用这个模板到同级项目。
+        - "**/Build"
+        - "**/bin"
+        - "**/obj"
+        - "**/packages"
+        - "**/artifacts"
+        - "**/publish"
+        - "**/_InnoSetup"
+
+        # TTS 运行时数据：大文件、生成文件或机器相关文件。
+        - "voices/voices.json"
+        - "voices/audio"
+        - "outputs"
+        - "pretrained_models"
+        - "**/.cache"
+        - "**/cache"
+        - "**/logs"
+        - "**/*.log"
+        - "**/*.tmp"
+        - "**/*.temp"
+        - "**/*.cache"
+        - "**/*.wav"
+        - "**/*.mp3"
+        - "**/*.flac"
+        - "**/*.ogg"
+        - "**/*.m4a"
+        - "**/*.safetensors"
+        - "**/*.ckpt"
+        - "**/*.pt"
+        - "**/*.pth"
+        - "**/*.onnx"
+        - "**/*.bin"
+
+  "{FOLDER_NAME}-Sync":
+    alpha: "./"
+
+    # 远端同步到对应工作目录
+    beta: "vibecoding-server:{WORK_DIR}"
+    mode: "two-way-resolved"
