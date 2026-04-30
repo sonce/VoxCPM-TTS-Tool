@@ -340,7 +340,10 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                     minimum=4, maximum=30, step=1, value=10,
                     label=i18n.t("field.inference_timesteps", "zh"),
                 )
-            # Two-step save flow: preview → save (save shown only after a successful preview).
+            # Two-step save flow: preview -> save. Keep the save button mounted
+            # under the preview audio and only toggle interactivity; some
+            # Gradio versions are flaky when resurrecting initially-hidden
+            # buttons after a long-running chained callback.
             preview_btn = gr.Button(i18n.t("btn.preview", "zh"), variant="primary")
             # Always visible so Gradio's per-component loading skin can render
             # in place during the SDK call. Empty (value=None) until preview
@@ -351,8 +354,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 visible=True,
                 interactive=False,
             )
-            with gr.Row(visible=False) as save_actions_row:
-                save_btn = gr.Button(i18n.t("btn.save", "zh"), variant="primary", visible=True)
+            with gr.Row(visible=True) as save_actions_row:
+                save_btn = gr.Button("保存当前音色", variant="primary", visible=True, interactive=False)
                 # "Save as" — create a NEW voice from the current form + preview
                 # without touching the voice being edited. Visible only in edit
                 # mode after a successful preview.
@@ -369,13 +372,13 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
 
         # ---- Wire callbacks ----
         def _hide_preview_and_save():
-            """Reset preview state + hide save / save-as buttons + preview audio.
+            """Reset preview state + disable save / hide save-as + preview audio.
             Called whenever the user changes mode or any input that invalidates the preview."""
             return (
                 ("", ""),                              # preview_state
                 gr.update(value=None),                 # preview_audio_out
-                gr.update(visible=False),              # save_actions_row
-                gr.update(visible=True),               # save_btn
+                gr.update(visible=True),               # save_actions_row
+                gr.update(visible=True, interactive=False),  # save_btn
                 gr.update(visible=False),              # save_as_btn
             )
 
@@ -593,8 +596,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             err = lambda msg: (
                 ("", ""),
                 gr.update(value=None),     # preview_audio_out — always visible, just clear
-                gr.update(visible=False),  # save_actions_row
-                gr.update(visible=True),   # save_btn
+                gr.update(visible=True),   # save_actions_row
+                gr.update(visible=True, interactive=False),  # save_btn
                 gr.update(visible=False),  # save_as_btn
                 msg,
             )
@@ -639,7 +642,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 (tmp_wav, voice_transcript),
                 gr.update(value=tmp_wav),                      # preview_audio_out
                 gr.update(visible=True),                       # save_actions_row
-                gr.update(visible=True),                       # save_btn
+                gr.update(visible=True, interactive=True),     # save_btn
                 gr.update(visible=bool(edit_id)),              # save_as_btn (only in edit mode)
                 "✅ 预览已生成，点击保存以入库",
             )
@@ -775,8 +778,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             return (
                 ("", ""),                              # preview_state
                 gr.update(value=None),                 # preview_audio_out
-                gr.update(visible=False),              # save_actions_row
-                gr.update(visible=True),               # save_btn
+                gr.update(visible=True),               # save_actions_row
+                gr.update(visible=True, interactive=False),  # save_btn
                 gr.update(visible=False),              # save_as_btn
             )
 
@@ -924,8 +927,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 # Entering edit mode invalidates any pending preview.
                 preview_state_v = ("", "")
                 preview_audio_v = gr.update(value=None)
-                save_actions_row_v = gr.update(visible=False)
-                save_btn_v = gr.update(visible=True)
+                save_actions_row_v = gr.update(visible=True)
+                save_btn_v = gr.update(visible=True, interactive=False)
                 save_as_btn_v = gr.update(visible=False)
 
             return (
@@ -1094,8 +1097,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 ),                                       # seed_text_box
                 ("", ""),                                # preview_state
                 gr.update(value=None),                   # preview_audio_out
-                gr.update(visible=False),                # save_actions_row
-                gr.update(visible=True),                 # save_btn
+                gr.update(visible=True),                 # save_actions_row
+                gr.update(visible=True, interactive=False),  # save_btn
                 gr.update(visible=False),                # save_as_btn
             )
 
