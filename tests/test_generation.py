@@ -156,6 +156,13 @@ def test_voice_normalize_true_includes_kwarg():
     assert kw["normalize"] is True
 
 
+def test_runtime_normalize_true_includes_kwarg():
+    kw = build_generate_kwargs(_design(normalize=False), "x",
+                               zipenhancer_loaded=True, audio_root=".",
+                               normalize_text=True)
+    assert kw["normalize"] is True
+
+
 def test_inference_timesteps_omitted_when_default():
     kw = build_generate_kwargs(_design(), "x", zipenhancer_loaded=True, audio_root=".",
                                inference_timesteps=10)

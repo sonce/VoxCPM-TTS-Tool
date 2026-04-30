@@ -22,6 +22,12 @@ def test_splits_on_ascii_period_and_question_mark():
     assert out == ["First.", " Second?", " Third!"]
 
 
+def test_decimal_period_does_not_split():
+    out = split_for_generation("道琼斯工业指数则下跌了0.57%。单纯看数字",
+                               char_budget=200)
+    assert out == ["道琼斯工业指数则下跌了0.57%。", "单纯看数字"]
+
+
 def test_falls_back_to_comma_when_sentence_too_long():
     long_sentence = "一段没有句号但很长的话，再来一截，又来一段，最后一截"
     out = split_for_generation(long_sentence, char_budget=10)

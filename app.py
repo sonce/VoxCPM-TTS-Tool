@@ -245,6 +245,10 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 minimum=10, maximum=30, step=1, value=20,
                 label="单段最长时长（秒，× 4 ≈ 字符预算）",
             )
+            gen_normalize_box = gr.Checkbox(
+                label=i18n.t("field.normalize", "zh"),
+                value=True,
+            )
             with gr.Accordion(i18n.t("field.advanced", "zh"), open=False):
                 cfg_value_slider = gr.Slider(
                     minimum=1.0, maximum=3.0, step=0.1, value=2.0,
@@ -450,10 +454,12 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 gr.update(interactive=False, visible=False),           # generate_btn
                 gr.update(interactive=False),                          # text_box
                 gr.update(interactive=False),                          # default_voice_dd
+                gr.update(interactive=False),                          # gen_normalize_box
                 gr.update(visible=True, value="停止"),                 # stop_btn
             )
 
-        def _gen_phase2(default_id, text, max_duration, cfg_value, inference_timesteps):
+        def _gen_phase2(default_id, text, max_duration, normalize_text,
+                        cfg_value, inference_timesteps):
             default = state.default_voice(default_id)
             prepped = localize_non_lang_tags(text)
             by_name = {v.name: v for v in state.library.list_voices()}
@@ -478,6 +484,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                     cfg_value=float(cfg_value),
                     inference_timesteps=int(inference_timesteps),
                     stop_flag=lambda: state.gen_stop_flag,
+                    normalize_text=bool(normalize_text),
                 ):
                     if isinstance(ev, Progress):
                         yield warn_md + f"▶ 正在生成第 {ev.done}/{ev.total} 段"
@@ -509,21 +516,24 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 gr.update(visible=False),                    # stop_btn
                 gr.update(interactive=True),                 # text_box
                 gr.update(interactive=True),                 # default_voice_dd
+                gr.update(interactive=True),                 # gen_normalize_box
             )
 
         generate_btn.click(
             _gen_phase1,
-            outputs=[audio_out, status_md, generate_btn, text_box, default_voice_dd, stop_btn],
+            outputs=[audio_out, status_md, generate_btn, text_box,
+                     default_voice_dd, gen_normalize_box, stop_btn],
         ).then(
             _gen_phase2,
             inputs=[default_voice_dd, text_box, max_duration_slider,
-                    cfg_value_slider, inference_timesteps_slider],
+                    gen_normalize_box, cfg_value_slider, inference_timesteps_slider],
             outputs=[status_md],
             concurrency_id="gen",
             concurrency_limit=1,
         ).then(
             _gen_phase3,
-            outputs=[audio_out, generate_btn, stop_btn, text_box, default_voice_dd],
+            outputs=[audio_out, generate_btn, stop_btn, text_box,
+                     default_voice_dd, gen_normalize_box],
             show_progress="full",
         )
 

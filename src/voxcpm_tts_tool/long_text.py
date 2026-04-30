@@ -50,11 +50,15 @@ def split_for_generation(text: str, *, char_budget: int) -> list[str]:
             buf.clear()
             buf_len = 0
 
-    for tok in tokens:
+    for i, tok in enumerate(tokens):
         buf.append(tok)
         buf_len += len(tok)
         # Prefer sentence terminator boundaries.
         if len(tok) == 1 and tok in _SENTENCE_TERMINATORS:
+            prev_tok = tokens[i - 1] if i > 0 else ""
+            next_tok = tokens[i + 1] if i + 1 < len(tokens) else ""
+            if tok == "." and prev_tok.isdigit() and next_tok.isdigit():
+                continue
             flush()
             continue
         # Comma fallback only if buffer has overflowed budget.

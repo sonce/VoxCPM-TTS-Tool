@@ -78,6 +78,7 @@ def build_generate_kwargs(
     zipenhancer_loaded: bool,
     audio_root: str,
     script_control: str | None = None,
+    normalize_text: bool = False,
     cfg_value: float = 2.0,
     inference_timesteps: int = 10,
 ) -> dict:
@@ -97,14 +98,14 @@ def build_generate_kwargs(
          → text-only, with voice.control as prefix if set (legacy).
 
     Per-call tuning knobs (cfg_value, inference_timesteps) are included only
-    when they differ from SDK defaults. `normalize` and `denoise` are
-    properties of the voice (see spec §Voice Library); `denoise` is still
-    gated by `zipenhancer_loaded`.
+    when they differ from SDK defaults. `normalize` can come either from
+    the voice's saved preference or the generation-page runtime toggle;
+    `denoise` is still gated by `zipenhancer_loaded`.
     """
     extras: dict = {}
     if cfg_value != 2.0:
         extras["cfg_value"] = cfg_value
-    if voice.normalize:
+    if voice.normalize or normalize_text:
         extras["normalize"] = True
     if inference_timesteps != 10:
         extras["inference_timesteps"] = inference_timesteps
@@ -173,6 +174,7 @@ def run_generation(
     cfg_value: float,
     inference_timesteps: int,
     stop_flag: Callable[[], bool],
+    normalize_text: bool = False,
 ) -> Iterator:
     """Stream Progress events per chunk + a final Result.
 
@@ -229,6 +231,7 @@ def run_generation(
             zipenhancer_loaded=zipenhancer_loaded,
             audio_root=audio_root,
             script_control=ctrl,
+            normalize_text=normalize_text,
             cfg_value=cfg_value,
             inference_timesteps=inference_timesteps,
         )
