@@ -155,12 +155,22 @@ def initialize(project_root: Path) -> tuple[AppState, list[str]]:
         if zipenhancer_loaded and zipenhancer_path is not None
         else nullcontext()
     )
+    # VoxCPM's optimize=True routes parts of inference through torch.compile /
+    # Inductor. On some PyTorch + CUDA builds that path crashes inside
+    # cudagraph_trees with:
+    #   AssertionError: torch._C._is_key_in_tls("tree_manager_containers")
+    # Keep the web tool on eager inference by default; users who want to risk
+    # the faster compiled path can opt in explicitly.
+    optimize_voxcpm = os.environ.get("VOXCPM_TTS_OPTIMIZE", "").strip() in {"1", "true", "True", "yes", "on"}
+    if not optimize_voxcpm:
+        messages.append("VoxCPM optimize disabled for PyTorch/Inductor stability")
+
     with torch_load_compat:
         model = voxcpm.VoxCPM.from_pretrained(
             hf_model_id=str(voxcpm_path),
             load_denoiser=zipenhancer_loaded,
             zipenhancer_model_id=str(zipenhancer_path) if zipenhancer_path is not None else None,
-            optimize=True,
+            optimize=optimize_voxcpm,
         )
     # voxcpm doesn't expose sample_rate uniformly; sniff once.
     if not hasattr(model, "sample_rate"):
