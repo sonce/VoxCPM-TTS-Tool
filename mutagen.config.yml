@@ -85,9 +85,9 @@ sync:
         - "**/*.onnx"
         - "**/*.bin"
 
-  "{FOLDER_NAME}-Sync":
+  "{SYNC_NAME}-Sync":
     alpha: "./"
 
     # 远端同步到对应工作目录
-    beta: "vibecoding-server:{WORK_DIR}"
+    beta: "vibecoding:{WORK_DIR}"
     mode: "two-way-resolved"

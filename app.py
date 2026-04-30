@@ -351,8 +351,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 visible=True,
                 interactive=False,
             )
-            with gr.Row():
-                save_btn = gr.Button(i18n.t("btn.save", "zh"), variant="primary", visible=False)
+            with gr.Row(visible=False) as save_actions_row:
+                save_btn = gr.Button(i18n.t("btn.save", "zh"), variant="primary", visible=True)
                 # "Save as" — create a NEW voice from the current form + preview
                 # without touching the voice being edited. Visible only in edit
                 # mode after a successful preview.
@@ -374,7 +374,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             return (
                 ("", ""),                              # preview_state
                 gr.update(value=None),                 # preview_audio_out
-                gr.update(visible=False),              # save_btn
+                gr.update(visible=False),              # save_actions_row
+                gr.update(visible=True),               # save_btn
                 gr.update(visible=False),              # save_as_btn
             )
 
@@ -383,7 +384,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             mode = effective_mode(top, sub)
             vis = field_visibility(mode)
             sub_visible = (top == "cloning")
-            preview_state_v, preview_audio_v, save_btn_v, save_as_btn_v = _hide_preview_and_save()
+            preview_state_v, preview_audio_v, save_actions_row_v, save_btn_v, save_as_btn_v = _hide_preview_and_save()
             return (
                 gr.update(visible=sub_visible),         # sub_mode_radio
                 gr.update(visible=vis["reference_audio"]),  # ref_audio
@@ -393,6 +394,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 gr.update(visible=vis["seed_text"]),    # seed_text_box
                 preview_state_v,
                 preview_audio_v,
+                save_actions_row_v,
                 save_btn_v,
                 save_as_btn_v,
             )
@@ -400,7 +402,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
         _MODE_OUTPUTS = [
             sub_mode_radio, ref_audio, prompt_box, control_box,
             denoise_box, seed_text_box,
-            preview_state, preview_audio_out, save_btn, save_as_btn,
+            preview_state, preview_audio_out, save_actions_row, save_btn, save_as_btn,
         ]
         top_mode_radio.change(_apply_visibility,
                               inputs=[top_mode_radio, sub_mode_radio],
@@ -533,16 +535,16 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
         # reference_audio and skipping ASR (which would overwrite the prompt
         # we just populated). Genuine new uploads while editing still re-ASR.
         def _on_ref_audio_change(audio_path, top, sub, edit_id):
-            preview_state_v, preview_audio_v, save_btn_v, save_as_btn_v = _hide_preview_and_save()
+            preview_state_v, preview_audio_v, save_actions_row_v, save_btn_v, save_as_btn_v = _hide_preview_and_save()
             mode = effective_mode(top, sub)
             if not audio_path or mode not in ("clone", "hifi"):
-                return gr.update(), preview_state_v, preview_audio_v, save_btn_v, save_as_btn_v
+                return gr.update(), preview_state_v, preview_audio_v, save_actions_row_v, save_btn_v, save_as_btn_v
             if edit_id:
                 v = state.library.find_by_id(edit_id)
                 if v and v.reference_audio:
                     voice_audio_abs = str(state.paths.root / v.reference_audio)
                     if os.path.normpath(audio_path) == os.path.normpath(voice_audio_abs):
-                        return gr.update(), preview_state_v, preview_audio_v, save_btn_v, save_as_btn_v
+                        return gr.update(), preview_state_v, preview_audio_v, save_actions_row_v, save_btn_v, save_as_btn_v
             print(f"[ASR] transcribe begin: path={audio_path}", file=sys.stderr, flush=True)
             try:
                 text = state.transcriber.transcribe(audio_path)
@@ -559,12 +561,12 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                     f"[识别失败] {type(exc).__name__}: {exc}\n"
                     "完整 traceback 已打印到控制台 — 把那段输出贴回来定位。"
                 )
-            return text, preview_state_v, preview_audio_v, save_btn_v, save_as_btn_v
+            return text, preview_state_v, preview_audio_v, save_actions_row_v, save_btn_v, save_as_btn_v
 
         ref_audio.change(
             _on_ref_audio_change,
             inputs=[ref_audio, top_mode_radio, sub_mode_radio, edit_voice_id],
-            outputs=[prompt_box, preview_state, preview_audio_out, save_btn, save_as_btn],
+            outputs=[prompt_box, preview_state, preview_audio_out, save_actions_row, save_btn, save_as_btn],
         )
 
         # Generate-preview: runs the SDK with the appropriate kwargs per
@@ -591,7 +593,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             err = lambda msg: (
                 ("", ""),
                 gr.update(value=None),     # preview_audio_out — always visible, just clear
-                gr.update(visible=False),  # save_btn
+                gr.update(visible=False),  # save_actions_row
+                gr.update(visible=True),   # save_btn
                 gr.update(visible=False),  # save_as_btn
                 msg,
             )
@@ -635,6 +638,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             return (
                 (tmp_wav, voice_transcript),
                 gr.update(value=tmp_wav),                      # preview_audio_out
+                gr.update(visible=True),                       # save_actions_row
                 gr.update(visible=True),                       # save_btn
                 gr.update(visible=bool(edit_id)),              # save_as_btn (only in edit mode)
                 "✅ 预览已生成，点击保存以入库",
@@ -669,7 +673,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                     ref_audio, prompt_box, seed_text_box,
                     lib_cfg_value_slider, lib_inference_timesteps_slider,
                     edit_voice_id],
-            outputs=[preview_state, preview_audio_out, save_btn, save_as_btn, lib_status],
+            outputs=[preview_state, preview_audio_out, save_actions_row, save_btn, save_as_btn, lib_status],
             show_progress="full",
         ).then(
             _exit_busy,
@@ -771,14 +775,15 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             return (
                 ("", ""),                              # preview_state
                 gr.update(value=None),                 # preview_audio_out
-                gr.update(visible=False),              # save_btn
+                gr.update(visible=False),              # save_actions_row
+                gr.update(visible=True),               # save_btn
                 gr.update(visible=False),              # save_as_btn
             )
 
         _SAVE_OUTPUTS = [
             voice_list, voice_picker, default_voice_dd, lib_status,
             edit_voice_id, edit_banner_row, rename_btn,
-            preview_state, preview_audio_out, save_btn, save_as_btn,
+            preview_state, preview_audio_out, save_actions_row, save_btn, save_as_btn,
         ]
 
         save_btn.click(
@@ -878,6 +883,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 seed_v = gr.update()
                 preview_state_v = gr.update()
                 preview_audio_v = gr.update()
+                save_actions_row_v = gr.update()
                 save_btn_v = gr.update()
                 save_as_btn_v = gr.update()
             else:
@@ -918,7 +924,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 # Entering edit mode invalidates any pending preview.
                 preview_state_v = ("", "")
                 preview_audio_v = gr.update(value=None)
-                save_btn_v = gr.update(visible=False)
+                save_actions_row_v = gr.update(visible=False)
+                save_btn_v = gr.update(visible=True)
                 save_as_btn_v = gr.update(visible=False)
 
             return (
@@ -926,7 +933,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 edit_id_v, banner_row_v, banner_md_v, rename_v,
                 name_v, top_v, sub_v, ctrl_v,
                 ref_v, prompt_v, denoise_v, norm_v, seed_v,
-                preview_state_v, preview_audio_v, save_btn_v, save_as_btn_v,
+                preview_state_v, preview_audio_v, save_actions_row_v, save_btn_v, save_as_btn_v,
             )
 
         _ROW_SELECT_OUTPUTS = [
@@ -934,7 +941,7 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
             edit_voice_id, edit_banner_row, edit_banner, rename_btn,
             name_box, top_mode_radio, sub_mode_radio, control_box,
             ref_audio, prompt_box, denoise_box, normalize_box, seed_text_box,
-            preview_state, preview_audio_out, save_btn, save_as_btn,
+            preview_state, preview_audio_out, save_actions_row, save_btn, save_as_btn,
         ]
 
         DELETE_CONFIRM_TIMEOUT = 8.0  # seconds the warning stays valid
@@ -1087,7 +1094,8 @@ def build_ui(state: AppState, startup_messages: list[str]) -> gr.Blocks:
                 ),                                       # seed_text_box
                 ("", ""),                                # preview_state
                 gr.update(value=None),                   # preview_audio_out
-                gr.update(visible=False),                # save_btn
+                gr.update(visible=False),                # save_actions_row
+                gr.update(visible=True),                 # save_btn
                 gr.update(visible=False),                # save_as_btn
             )
 
